@@ -60,6 +60,42 @@ function plotData(map) {
     let xMap = map.x;
     let yMap = map.y;
 
+    drawRegressionLine(data);
+
+    // plot new title
+    d3.select('#title').remove()
+    svgContainer.append('text')
+    .attr('x', 80)
+    .attr('y', 40)
+    .attr('id', "title")
+    .style('font-size', '13pt')
+    .text("Neighborhood Group by Minimum Nights and Availability (All Neighborhood Groups)");
+
+    // append data to SVG and plot as points
+    svgContainer.selectAll('.dot')
+    .data(data)
+    .enter()
+    .append('circle')
+        .attr('cx', xMap)
+        .attr('cy', yMap)
+        .attr('r', '4')
+        .attr('stroke', "royalblue")
+        .style("fill-opacity", "0")
+            // add tooltips
+            .on("mouseover", function(d){
+                div.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                div.html("Availability in 365: " + d.availability_365 + "<br/>" + "Minimum Nights: " + d.minimum_nights )
+                    .style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY - 28) + "px")
+            })
+            .on("mouseout", function(d){
+                div.transition()
+                    .duration(500)
+                    .style("opacity", 0)
+            });
+
     var dropDown1 = d3.select("#filter1").append("select")
             .attr("name", "neighborhood_group-list");
 
@@ -67,10 +103,8 @@ function plotData(map) {
     .data(data)
     .text("All")
     .attr("value", "select")
+    .classed("default",true)
     .enter();
-
-    
-
 
     var options1 = dropDown1.selectAll("option")
         .data(d3.map(data, function(d){return d.neighbourhood_group;}).keys())
