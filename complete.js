@@ -1,8 +1,10 @@
 "use-strict";
 (function() {
 
-  var svgContainer = ""; // we want svgContainer to be global
-  var regressionConstants = ""; // we want context to be global
+    var svgContainer = ""; // we want svgContainer to be global
+    var regressionConstants = ""; // we want context to be global
+    var Pvalue = "";
+    var Rsquared = "";
 
   // wait until window loads to execute code
   window.onload = function() {
@@ -60,7 +62,7 @@ function plotData(map) {
     let xMap = map.x;
     let yMap = map.y;
 
-    drawRegressionLine(data);
+    drawRegressionLine(data,"All");
 
     // plot new title
     d3.select('#title').remove()
@@ -125,7 +127,7 @@ function plotData(map) {
         let display = this.checked ? "none" : "inline";
 
         if (selected === "select"){
-            drawRegressionLine(data);
+            drawRegressionLine(data,"All");
 
         // plot new title
         d3.select('#title').remove()
@@ -154,7 +156,8 @@ function plotData(map) {
 
             console.log(selected)
             regressionData = data.filter(function(d) {return selected == d.neighbourhood_group;})
-            drawRegressionLine(regressionData);
+            
+            drawRegressionLine(regressionData,selected);
 
             // plot new title
             d3.select('#title').remove()
@@ -363,7 +366,7 @@ function numberWithCommas(x) {
     }
 
     // Draw the regression line
-    function drawRegressionLine(regressionData) {
+    function drawRegressionLine(regressionData,neighborGroup) {
 
         // get arrays of fertility rate data and life Expectancy data
         let minimum_nights_data = regressionData.map((row) => parseFloat(row["minimum_nights"]));
@@ -379,6 +382,36 @@ function numberWithCommas(x) {
         // convert points to Canvas points
         startPoint = toCanvasPoint(axesLimits,startPoint);
         endPoint = toCanvasPoint(axesLimits,endPoint);
+
+        const regressionValues = [
+            {Neighborhood: "All", PValue: "< 2.2e-16 ***", RSquared: "0.008739"},
+            {Neighborhood: "Ballard", PValue: "0.03243 *", RSquared: "0.007607"},
+            {Neighborhood: "Beacon Hill", PValue: "0.708", RSquared: "-0.002735"},
+            {Neighborhood: "Capitol Hill", PValue: "7.03e-06 ***", RSquared: "0.02047"},
+            {Neighborhood: "Cascade", PValue: "<2e-16 ***", RSquared: "0.1412"},
+            {Neighborhood: "Central Area", PValue: "0.0991", RSquared: "0.002133"},
+            {Neighborhood: "Delridge", PValue: "0.000165 ***", RSquared: "0.04886"},
+            {Neighborhood: "Downtown", PValue: "0.0293 *", RSquared: "0.002259"},
+            {Neighborhood: "Interbay", PValue: "6.88e-13 ***", RSquared: "0.7494"},
+            {Neighborhood: "Lake City", PValue: "0.556", RSquared: "-0.004363"},
+            {Neighborhood: "Magnolia", PValue: "0.409", RSquared: "-0.001917"},
+            {Neighborhood: "Northgate", PValue: "0.917", RSquared: "-0.004622"},
+            {Neighborhood: "Other neighborhoods", PValue: "0.0225 *", RSquared: "0.002502"},
+            {Neighborhood: "Queen Anne", PValue: "5.51e-05 ***", RSquared: "0.02348"},
+            {Neighborhood: "Rainier Valley", PValue: "0.00156 **", RSquared: "0.0209"},
+            {Neighborhood: "Seward Park", PValue: "0.984", RSquared: "-0.01162"},
+            {Neighborhood: "University District", PValue: "0.986", RSquared: "-0.004131"},
+            {Neighborhood: "West Seattle", PValue: "0.935", RSquared: "-0.002074"}
+        ]
+
+        
+        var i;
+        for (i = 0; i < regressionValues.length; i++){
+            if ( regressionValues[i]["Neighborhood"] === neighborGroup){
+                Pvalue = regressionValues[i]["PValue"];
+                Rsquared = regressionValues[i]["RSquared"];
+            }
+        }
 
         // make tooltip
         let div = d3.select("body").append("div")
@@ -399,7 +432,7 @@ function numberWithCommas(x) {
                 div.transition()
                     .duration(200)
                     .style("opacity", .9);
-                div.html("Availability in 365= " + Math.round(regressionConstants.a*1000)/1000 + "*Minimum Nights+" + Math.round(regressionConstants.b*1000)/1000 + "<br/>" + "Slope: " + Math.round(regressionConstants.a*1000)/1000 + "<br/>" + "Intercept: " + Math.round(regressionConstants.b*1000)/1000 )
+                div.html("Availability in 365= " + Math.round(regressionConstants.a*1000)/1000 + "*Minimum Nights+" + Math.round(regressionConstants.b*1000)/1000 + "<br/>" + "Slope: " + Math.round(regressionConstants.a*1000)/1000 + "<br/>" + "Intercept: " + Math.round(regressionConstants.b*1000)/1000 + "<br/>" + "P-Value: " + Pvalue + "<br/>" + "R-Squared: " + Rsquared  )
                     .style("left", (d3.event.pageX) + "px")
                     .style("top", (d3.event.pageY - 28) + "px")
             })
